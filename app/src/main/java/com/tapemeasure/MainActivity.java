@@ -2,21 +2,18 @@ package com.tapemeasure;
 
 import android.annotation.SuppressLint;
 import android.hardware.Sensor;
-
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
-
 import android.hardware.SensorManager;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 
 
-/*Its Yea Boi*/
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
@@ -38,6 +35,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * Some older devices needs a small delay between UI widget updates
      * and a change of the status and navigation bar.
      */
+
     //for accelerometer values
     TextView outputX;
     TextView outputY;
@@ -202,15 +200,60 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
+
+    private static final boolean ADAPTIVE_ACCEL_FILTER = true;
+    float lastAccel[] = new float[3];
+    float accelFilter[] = new float[3];
+
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if(history != null)
+
+        final float alpha = 0.8f;
+        float []  gravity = new float[]{0f,0f,0f};
+        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
+        gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
+        gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
+        history = new float[3];
+
+        history[0] = event.values[0]*0.8f+history[0]*(1.0f-0.8f);
+        history[1] = event.values[1]*0.8f+history[1]*(1.0f-0.8f);
+        history[2] = event.values[2]*0.8f+history[2]*(1.0f-0.8f);
+
+        history[0] = event.values[0] - history[0];
+        history[1] = event.values[1] - history[1];
+        history[2] = event.values[2] - history[2];
+
+        // high pass filter
+        float updateFreq = 30; // match this to your update speed
+        float cutOffFreq = 0.9f;
+        float RC = 1.0f / cutOffFreq;
+        float dt = 1.0f / updateFreq;
+        float filterConstant = RC / (dt + RC);
+        float a = filterConstant;
+        float kAccelerometerMinStep = 0.033f;
+        float kAccelerometerNoiseAttenuation = 3.0f;
+
+        if(ADAPTIVE_ACCEL_FILTER)
+        {
+            float d = clamp(Math.abs(norm(accelFilter[0], accelFilter[1], accelFilter[2]) - norm(event.values[0], event.values[1], event.values[2])) / kAccelerometerMinStep - 1.0f, 0.0f, 1.0f);
+            a = d * filterConstant / kAccelerometerNoiseAttenuation + (1.0f - d) * filterConstant;
+        }
+
+        accelFilter[0] = a * (accelFilter[0] + event.values[0] - lastAccel[0]);
+        accelFilter[1] = a * (accelFilter[1] + event.values[1] - lastAccel[1]);
+        accelFilter[2] = a * (accelFilter[2] + event.values[2] - lastAccel[2]);
+
+        lastAccel[0] = event.values[0];
+        lastAccel[1] = event.values[1];
+        lastAccel[2] = event.values[2];
+
+        /*if(history != null)
         {
             float deltaTime = (event.timestamp - last_Time) * NS2S;
 
             for(int i = 0;i<3;i++)
             {
-                velocity[i] += (event.values[i]+history[i])/2 * deltaTime;
+                velocity[i] += (((int)(event.values[i]-gravity[i])+history[i])/2 * deltaTime);
                 position[i] += velocity[i]*deltaTime;
             }
         }
@@ -222,16 +265,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             velocity[0] = velocity[1] = velocity[2] = 0f;
             position[0] = position[1] = position[2] = 0f;
         }
-        System.arraycopy(event.values, 0, history, 0, 3);
-        last_Time = event.timestamp;
-        outputX.setText("x, y, z: "+position[0]+", "+position[1]+", "+position[2]);
+        System.arraycopy(velocity, 0, history, 0, 3);
+        last_Time = event.timestamp;*/
+        //outputX.setText("x, y, z: "+position[0]+", "+position[1]+", "+position[2]);
+        outputX.setText("x, y, z: "+(int)accelFilter[0]+", "+(int)accelFilter[1]+", "+(int)accelFilter[2]);
     }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), sensorManager.SENSOR_DELAY_GAME);
-        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), sensorManager.SENSOR_DELAY_GAME);
-
+    
+    float clamp(float value, float min, float max)
+    {
+        if(value < min)return min;
+        else if(value > max)return max;
+        return value;
+    }
+    float norm(float a, float b, float c)
+    {
+        return (float) Math.sqrt(a*a+b*b+c*c);
     }
 }

@@ -1,6 +1,8 @@
 package com.tapemeasure;
 
 import android.annotation.SuppressLint;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -85,6 +87,10 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    //Sensor
+    private final SensorManager SM;
+    private final Sensor mAcc;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,6 +114,11 @@ public class MainActivity extends AppCompatActivity {
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
         findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+
+        //findViewById(R.id.dummy_button).setVisibility(View.INVISIBLE);
+
+        SM = (SensorManager)getSystemService(SEARCH_SERVICE);
+        
     }
 
     @Override
@@ -161,5 +172,10 @@ public class MainActivity extends AppCompatActivity {
     private void delayedHide(int delayMillis) {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
+    }
+
+    private int getAccValue()
+    {
+        return Sensor.TYPE_LINEAR_ACCELERATION.values[0];
     }
 }

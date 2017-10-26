@@ -1,12 +1,17 @@
 package com.tapemeasure;
 
 import android.annotation.SuppressLint;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
 
 
 /*Its Yea Boi*/
@@ -14,7 +19,7 @@ import android.view.View;
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SensorEventListener{
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -31,6 +36,10 @@ public class MainActivity extends AppCompatActivity {
      * Some older devices needs a small delay between UI widget updates
      * and a change of the status and navigation bar.
      */
+    //for accelerometer values
+    TextView outputX;
+    TextView outputY;
+    SensorManager sensorManager = null;
     private static final int UI_ANIMATION_DELAY = 300;
     private final Handler mHideHandler = new Handler();
     private View mContentView;
@@ -89,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         setContentView(R.layout.activity_main);
 
         mVisible = true;
@@ -108,6 +118,13 @@ public class MainActivity extends AppCompatActivity {
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
         findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+
+
+
+        //just some textviews, for data output
+        outputX = (TextView) findViewById(R.id.outputX);
+        outputY = (TextView) findViewById(R.id.outputY);
+
     }
 
     @Override
@@ -161,5 +178,33 @@ public class MainActivity extends AppCompatActivity {
     private void delayedHide(int delayMillis) {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor arg0, int arg1) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        synchronized (this) {
+            switch (event.sensor.getType()){
+                case Sensor.TYPE_ACCELEROMETER:
+                    outputX.setText("acclaration x: "+Float.toString(event.values[0]));
+                    outputY.setText("acclaration y:"+Float.toString(event.values[1]));
+                    break;
+
+
+            }
+        }
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), sensorManager.SENSOR_DELAY_GAME);
+        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), sensorManager.SENSOR_DELAY_GAME);
     }
 }

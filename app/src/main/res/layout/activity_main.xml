@@ -10,22 +10,25 @@
          TextureView, etc. -->
 
     <TextView
-        android:id="@+id/outputX"
+        android:id="@+id/outputY"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:gravity="center_vertical|right"
+        android:layout_gravity="center_vertical"
         android:text="Hi"
-        android:textColor="#FFFF00" />
+        android:textColor="#FFFF00"
+        android:visibility="invisible"/>
 
     <TextView
-        android:id="@+id/outputY"
+        android:id="@+id/outputX"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
+        android:layout_gravity="center_vertical"
         android:layout_weight="1"
-        android:gravity="center_vertical|left"
         android:text="Hello"
-        android:textColor="#CCCCCC" />
+        android:textAlignment="viewStart"
+        android:textColor="#CCCCCC"
+        android:visibility="invisible"/>
 
     <!-- This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows. -->
@@ -55,13 +58,22 @@
 
         </LinearLayout>
 
+        <Button
+            android:id="@+id/start_btn"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_gravity="center"
+            android:background="@drawable/rnd_button"
+            android:padding="15dp"
+            android:text="Start"
+            android:typeface="monospace" />
+
         <TextView
             android:id="@+id/fullscreen_content"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
             android:keepScreenOn="true"
-            android:text="@string/dummy_content"
             android:textColor="#33b5e5"
             android:textSize="50sp"
             android:textStyle="bold" />

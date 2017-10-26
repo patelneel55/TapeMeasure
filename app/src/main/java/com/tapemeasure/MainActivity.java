@@ -11,6 +11,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     StringBuilder builder = new StringBuilder();
 
     float [] history = new float[3];
+    float [] cache = null;
     float [] velocity = null;
     float [] position = null;
     private static final boolean ADAPTIVE_ACCEL_FILTER = true;
@@ -53,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private static final int UI_ANIMATION_DELAY = 300;
     private final Handler mHideHandler = new Handler();
     private View mContentView;
+    public boolean start = true;
     private final Runnable mHidePart2Runnable = new Runnable() {
         @SuppressLint("InlinedApi")
         @Override
@@ -110,7 +113,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         setContentView(R.layout.activity_main);
 
         mVisible = true;
@@ -131,17 +133,51 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // while interacting with the UI.
         findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
 
-        Sensor accelerometer = sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).get(0);
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
-
-
         //just some textviews, for data output
         outputX = (TextView) findViewById(R.id.outputX);
         outputY = (TextView) findViewById(R.id.outputY);
+        
+        Button btn = (Button) findViewById(R.id.start_btn);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(start)
+                {
+                    Button btn = (Button) findViewById(R.id.start_btn);
+                    outputY.setVisibility(View.VISIBLE);
+                    outputX.setVisibility(View.VISIBLE);
+                    startSensors();
+                    btn.setText("Stop");
+                    start = false;
+                }
+                else
+                {
+                    Button btn = (Button) findViewById(R.id.start_btn);
+                    outputY.setVisibility(View.VISIBLE);
+                    outputX.setVisibility(View.VISIBLE);
+                    stopSensors();
+                    btn.setText("Start");
+                    start = true;
+                }
+            }
+        });
+
+
+
 
 
     }
 
+    public void stopSensors()
+    {
+        sensorManager.unregisterListener(this);
+    }
+    public void startSensors()
+    {
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        Sensor accelerometer = sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).get(0);
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+    }
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
@@ -206,34 +242,33 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent event) {
 
 
-
-
-
-
-
         //lowPassFilter(event.values[0], event.values[1], event.values[2]);
-        highPassFilter(event.values[0], event.values[1], event.values[2]);
+        //highPassFilter(event.values[0], event.values[1], event.values[2]);
 
-        float deltaTime = (event.timestamp - last_Time)*NS2S;
-        outputY.setText(event.timestamp+"\n"+last_Time+"\n"+deltaTime+"");
-        if(velocity != null)
+        if(cache != null)
         {
-            for (int i = 0; i < 3; i++) {
-                velocity[i] += accelFilter[i] * deltaTime;
-                position[i] += velocity[i] * deltaTime;
-            }
+            float deltaTime = (event.timestamp - last_Time)*NS2S;
+            outputY.setText(event.timestamp+"\n"+last_Time+"\n"+deltaTime+"");
+
+                for (int i = 0; i < 3; i++) {
+                    velocity[i] = (event.values[i]+cache[i])/2 * deltaTime;
+                    position[i] += velocity[i] * deltaTime; // Position in meters
+                }
         }
         else
         {
+            cache = new float[3];
             velocity = new float[3];//{event.values[0], event.values[1], event.values[2]};
             position = new float[3];
             velocity[0] = velocity[1] = velocity[2] = 0f;
             position[0] = position[1] = position[2] = 0f;
         }
+        System.arraycopy(event.values, 0, cache, 0, 3);
         last_Time = event.timestamp;
-        
+
+        int distance = (int)Math.sqrt(position[0]*position[0]+position[1]*position[1]+position[2]*position[2])*100;
         //outputX.setText("x, y, z: "+position[0]+", "+position[1]+", "+position[2]);
-        outputX.setText("x, y, z: "+(int)position[0]+", "+(int)position[1]+", "+(int)position[2]);
+        outputX.setText("xAcc, yAcc, zAcc: "+(int)event.values[0]+", "+(int)accelFilter[1]+", "+(int)accelFilter[2]+"\n"+"xVel, yVel, zVel: "+(int)velocity[0]+", "+(int)velocity[1]+", "+(int)velocity[2]+"\n"+"xPos, yPos, zPos: "+(int)position[0]+", "+(int)position[1]+", "+(int)position[2]+"\nDistance: "+distance);
     }
 
     private void highPassFilter(float aX, float aY, float aZ)

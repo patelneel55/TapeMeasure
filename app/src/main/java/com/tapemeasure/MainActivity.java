@@ -96,6 +96,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     };
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -120,6 +122,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
         findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+
 
 
 
@@ -183,6 +186,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
 
+
     @Override
     public void onAccuracyChanged(Sensor arg0, int arg1) {
         // TODO Auto-generated method stub
@@ -209,5 +213,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onResume();
         sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), sensorManager.SENSOR_DELAY_GAME);
         sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), sensorManager.SENSOR_DELAY_GAME);
+
     }
 }

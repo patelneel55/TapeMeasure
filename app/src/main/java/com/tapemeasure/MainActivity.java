@@ -14,6 +14,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import static android.R.attr.gravity;
+
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -161,11 +163,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
             }
         });
-
-
-
-
-
     }
 
     public void stopSensors()
@@ -242,7 +239,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent event) {
 
 
-        //lowPassFilter(event.values[0], event.values[1], event.values[2]);
+        //highPassRampingFilter(event.values[0], event.values[1], event.values[2]);
         //highPassFilter(event.values[0], event.values[1], event.values[2]);
 
         if(cache != null)
@@ -298,7 +295,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
-    private void lowPassFilter(float aX, float aY, float aZ)
+    private void highPassRampingFilter(float aX, float aY, float aZ)
     {
         final float filterFactor = 0.9f;
         accelFilter[0] = aX*filterFactor+accelFilter[0]*(1.0f-filterFactor);
@@ -308,6 +305,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelFilter[0] = aX - accelFilter[0];
         accelFilter[1] = aY - accelFilter[1];
         accelFilter[2] = aZ - accelFilter[2];
+    }
+
+    private void lowPassFilter(float aX, float aY, float aZ)
+    {
     }
 
     float clamp(float value, float min, float max)

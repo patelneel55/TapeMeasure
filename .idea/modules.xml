@@ -3,9 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/TapeMeasure.iml" filepath="$PROJECT_DIR$/TapeMeasure.iml" />
-      <module fileurl="file://C:\Users\Alpallion\Desktop\TapeMeasure\TapeMeasure.iml" filepath="C:\Users\Alpallion\Desktop\TapeMeasure\TapeMeasure.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../../../Alpallion/Desktop/TapeMeasure/TapeMeasure.iml" filepath="$PROJECT_DIR$/../../../../Alpallion/Desktop/TapeMeasure/TapeMeasure.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://C:\Users\Alpallion\Desktop\TapeMeasure\app\app.iml" filepath="C:\Users\Alpallion\Desktop\TapeMeasure\app\app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../../../Alpallion/Desktop/TapeMeasure/app/app.iml" filepath="$PROJECT_DIR$/../../../../Alpallion/Desktop/TapeMeasure/app/app.iml" />
     </modules>
   </component>
 </project>

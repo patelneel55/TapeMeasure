@@ -42,6 +42,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     TextView outputX;
     TextView outputY;
     SensorManager sensorManager = null;
+    StringBuilder builder = new StringBuilder();
+
+    float [] history = null;
+    float [] velocity = null;
+    float [] position = null;
+    String [] direction = {"NONE","NONE"};
+    static final float NS2S = 1.0f / 1000000000.0f;
+    long last_Time = 0;
     private static final int UI_ANIMATION_DELAY = 300;
     private final Handler mHideHandler = new Handler();
     private View mContentView;
@@ -121,7 +129,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // while interacting with the UI.
         findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
 
-
+        Sensor accelerometer = sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).get(0);
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
 
         //just some textviews, for data output
         outputX = (TextView) findViewById(R.id.outputX);
@@ -191,18 +200,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        synchronized (this) {
-            switch (event.sensor.getType()){
-                case Sensor.TYPE_ACCELEROMETER:
-                    outputX.setText("acclaration x: "+Float.toString(event.values[0]));
-                    outputY.setText("acclaration y:"+Float.toString(event.values[1]));
-                    break;
+        if(history != null)
+        {
+            float deltaTime = (event.timestamp - last_Time) * NS2S;
 
-
+            for(int i = 0;i<3;i++)
+            {
+                velocity[i] += (event.values[i]+history[i])/2 * deltaTime;
+                position[i] += velocity[i]*deltaTime;
             }
         }
+        else
+        {
+            history = new float[3];
+            velocity = new float[3];//{event.values[0], event.values[1], event.values[2]};
+            position = new float[3];
+            velocity[0] = velocity[1] = velocity[2] = 0f;
+            position[0] = position[1] = position[2] = 0f;
+        }
+        System.arraycopy(event.values, 0, history, 0, 3);
+        last_Time = event.timestamp;
+        outputX.setText("x, y, z: "+position[0]+", "+position[1]+", "+position[2]);
     }
-
 
     @Override
     protected void onResume() {

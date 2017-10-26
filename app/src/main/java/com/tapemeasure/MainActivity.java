@@ -42,9 +42,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     SensorManager sensorManager = null;
     StringBuilder builder = new StringBuilder();
 
-    float [] history = null;
+    float [] history = new float[3];
     float [] velocity = null;
     float [] position = null;
+    private static final boolean ADAPTIVE_ACCEL_FILTER = true;
+    float accelFilter[] = new float[3];
     String [] direction = {"NONE","NONE"};
     static final float NS2S = 1.0f / 1000000000.0f;
     long last_Time = 0;
@@ -200,77 +202,79 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
-
-    private static final boolean ADAPTIVE_ACCEL_FILTER = true;
-    float lastAccel[] = new float[3];
-    float accelFilter[] = new float[3];
-
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        final float alpha = 0.8f;
-        float []  gravity = new float[]{0f,0f,0f};
-        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
-        gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
-        gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
-        history = new float[3];
 
-        history[0] = event.values[0]*0.8f+history[0]*(1.0f-0.8f);
-        history[1] = event.values[1]*0.8f+history[1]*(1.0f-0.8f);
-        history[2] = event.values[2]*0.8f+history[2]*(1.0f-0.8f);
 
-        history[0] = event.values[0] - history[0];
-        history[1] = event.values[1] - history[1];
-        history[2] = event.values[2] - history[2];
 
-        // high pass filter
-        float updateFreq = 30; // match this to your update speed
-        float cutOffFreq = 0.9f;
-        float RC = 1.0f / cutOffFreq;
-        float dt = 1.0f / updateFreq;
-        float filterConstant = RC / (dt + RC);
-        float a = filterConstant;
-        float kAccelerometerMinStep = 0.033f;
-        float kAccelerometerNoiseAttenuation = 3.0f;
 
-        if(ADAPTIVE_ACCEL_FILTER)
+
+
+        //lowPassFilter(event.values[0], event.values[1], event.values[2]);
+        highPassFilter(event.values[0], event.values[1], event.values[2]);
+
+        float deltaTime = (event.timestamp - last_Time)*NS2S;
+        outputY.setText(event.timestamp+"\n"+last_Time+"\n"+deltaTime+"");
+        if(velocity != null)
         {
-            float d = clamp(Math.abs(norm(accelFilter[0], accelFilter[1], accelFilter[2]) - norm(event.values[0], event.values[1], event.values[2])) / kAccelerometerMinStep - 1.0f, 0.0f, 1.0f);
-            a = d * filterConstant / kAccelerometerNoiseAttenuation + (1.0f - d) * filterConstant;
-        }
-
-        accelFilter[0] = a * (accelFilter[0] + event.values[0] - lastAccel[0]);
-        accelFilter[1] = a * (accelFilter[1] + event.values[1] - lastAccel[1]);
-        accelFilter[2] = a * (accelFilter[2] + event.values[2] - lastAccel[2]);
-
-        lastAccel[0] = event.values[0];
-        lastAccel[1] = event.values[1];
-        lastAccel[2] = event.values[2];
-
-        /*if(history != null)
-        {
-            float deltaTime = (event.timestamp - last_Time) * NS2S;
-
-            for(int i = 0;i<3;i++)
-            {
-                velocity[i] += (((int)(event.values[i]-gravity[i])+history[i])/2 * deltaTime);
-                position[i] += velocity[i]*deltaTime;
+            for (int i = 0; i < 3; i++) {
+                velocity[i] += accelFilter[i] * deltaTime;
+                position[i] += velocity[i] * deltaTime;
             }
         }
         else
         {
-            history = new float[3];
             velocity = new float[3];//{event.values[0], event.values[1], event.values[2]};
             position = new float[3];
             velocity[0] = velocity[1] = velocity[2] = 0f;
             position[0] = position[1] = position[2] = 0f;
         }
-        System.arraycopy(velocity, 0, history, 0, 3);
-        last_Time = event.timestamp;*/
+        last_Time = event.timestamp;
+        
         //outputX.setText("x, y, z: "+position[0]+", "+position[1]+", "+position[2]);
-        outputX.setText("x, y, z: "+(int)accelFilter[0]+", "+(int)accelFilter[1]+", "+(int)accelFilter[2]);
+        outputX.setText("x, y, z: "+(int)position[0]+", "+(int)position[1]+", "+(int)position[2]);
     }
-    
+
+    private void highPassFilter(float aX, float aY, float aZ)
+    {
+        float updateFreq = 30; // match this to your update speed
+        float cutOffFreq = 0.9f;
+        float RC = 1.0f / cutOffFreq;
+        float dt = 1.0f / updateFreq;
+        float filterConstant = RC / (dt + RC);
+        float alpha = filterConstant;
+        float kAccelerometerMinStep = 0.033f;
+        float kAccelerometerNoiseAttenuation = 3.0f;
+
+        if(ADAPTIVE_ACCEL_FILTER)
+        {
+            float d = clamp(Math.abs(norm(accelFilter[0], accelFilter[1], accelFilter[2]) - norm(aX, aY, aZ)) / kAccelerometerMinStep - 1.0f, 0.0f, 1.0f);
+            alpha = d * filterConstant / kAccelerometerNoiseAttenuation + (1.0f - d) * filterConstant;
+        }
+
+        accelFilter[0] = (float) (alpha * (accelFilter[0] + aX - history[0]));
+        accelFilter[1] = (float) (alpha * (accelFilter[1] + aY - history[1]));
+        accelFilter[2] = (float) (alpha * (accelFilter[2] + aZ - history[2]));
+
+        history[0] = aX;
+        history[1] = aY;
+        history[2] = aZ;
+
+    }
+
+    private void lowPassFilter(float aX, float aY, float aZ)
+    {
+        final float filterFactor = 0.9f;
+        accelFilter[0] = aX*filterFactor+accelFilter[0]*(1.0f-filterFactor);
+        accelFilter[1] = aY*filterFactor+accelFilter[1]*(1.0f-filterFactor);
+        accelFilter[2] = aZ*filterFactor+accelFilter[2]*(1.0f-filterFactor);
+
+        accelFilter[0] = aX - accelFilter[0];
+        accelFilter[1] = aY - accelFilter[1];
+        accelFilter[2] = aZ - accelFilter[2];
+    }
+
     float clamp(float value, float min, float max)
     {
         if(value < min)return min;

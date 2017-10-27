@@ -45,6 +45,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     SensorManager sensorManager = null;
     StringBuilder builder = new StringBuilder();
 
+    //Velocity Integral
+    float [] integralV = new float[3];
+    //Distance Integral
+    float [] integralD = new float[3];
+    //History for Velocity
+    float[] historyV = new float[3];
+
     float [] history = new float[3];
     float [] cache = null;
     float [] velocity = null;
@@ -277,7 +284,33 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             position[0] += velocity[0] * deltaTime;
             position[1] += velocity[1] * deltaTime;
             position[2] += velocity[2] * deltaTime;
-            outputX.setText("xAcc, yAcc, zAcc: "+deltaX+", "+deltaY+", "+deltaZ+"\n"+"xVel, yVel, zVel: "+(int)velocity[0]+", "+(int)velocity[1]+", "+(int)velocity[2]+"\n"+"xPos, yPos, zPos: "+(int)position[0]+", "+(int)position[1]+", "+(int)position[2]);
+
+
+
+            //Remonns Sum Test Code
+            if(deltaX != 0.0f)
+            {
+                integralV[0] += trapArea(history[0], deltaX, deltaTime);
+                historyV[0] = integralV[0];
+                integralD[0] += trapArea(historyV[0], integralV[0], deltaTime);
+            }
+            if(deltaY != 0.0f)
+            {
+                integralV[1] += trapArea(history[1], deltaY, deltaTime);
+                historyV[1] = integralV[1];
+                integralD[1] += trapArea(historyV[1],integralV[1], deltaTime);
+            }
+            if(deltaZ != 0.0f) {
+                integralV[2] += trapArea(history[2], deltaZ, deltaTime);
+                historyV[2] = integralV[2];
+                integralD[2] += trapArea(historyV[2], integralV[2], deltaTime);
+            }
+            else if(deltaX == 0.0f || deltaY == 0.0f || deltaZ == 0.0f) {
+                historyV[0] = historyV[1] = historyV[2] = 0;
+            }
+
+            outputY.setText("xDis " + integralD[0] + " | yDis" + integralD[1] + " | zDis " + integralD[2]);
+            outputX.setText("xAcc, yAcc, zAcc: "+deltaX+", "+deltaY+", "+deltaZ+"\n"+"xVel, yVel, zVel: "+(int)velocity[0]+", "+(int)velocity[1]+", "+(int)velocity[2]+"\n"+"xPos, yPos, zPos: "+position[0]+", "+position[1]+", "+position[2]);
         }
 
         last_Time = event.timestamp;
@@ -361,5 +394,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     float norm(float a, float b, float c)
     {
         return (float) Math.sqrt(a*a+b*b+c*c);
+    }
+
+    float trapArea(float past, float current, float dT)
+    {
+        return 0.5f*dT*(past+current);
     }
 }

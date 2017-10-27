@@ -58,6 +58,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private final Handler mHideHandler = new Handler();
     private View mContentView;
     public boolean start = true;
+
+    private final float NOISE = (float)2.0;
+    private boolean mInitialized = false;
+
+    private float mLastX, mLastY, mLastZ;
     private final Runnable mHidePart2Runnable = new Runnable() {
         @SuppressLint("InlinedApi")
         @Override
@@ -242,9 +247,44 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //highPassRampingFilter(event.values[0], event.values[1], event.values[2]);
         //highPassFilter(event.values[0], event.values[1], event.values[2]);
 
+
+        float x = event.values[0];
+        float y = event.values[1];
+        float z = event.values[2];
+
+        float deltaTime = (event.timestamp - last_Time)*NS2S;
+        if (!mInitialized) {
+            mLastX = x;
+            mLastY = y;
+            mLastZ = z;
+            velocity = new float[] {0f, 0f, 0f};
+            position = new float[] {0f, 0f, 0f};
+            outputX.setText("xAcc, yAcc, zAcc: 0,0,0");
+            mInitialized = true;
+        } else {
+            float deltaX = mLastX - x;
+            float deltaY = mLastY - y;
+            float deltaZ = mLastZ - z;
+            if (Math.abs(deltaX) < NOISE) deltaX = (float) 0.0;
+            if (Math.abs(deltaY) < NOISE) deltaY = (float) 0.0;
+            if (Math.abs(deltaZ) < NOISE) deltaZ = (float) 0.0;
+            mLastX = x;
+            mLastY = y;
+            mLastZ = z;
+            velocity[0] = ( deltaX* deltaTime);
+            velocity[1] = ( deltaY* deltaTime);
+            velocity[2] = ( deltaZ* deltaTime);
+            position[0] += velocity[0] * deltaTime;
+            position[1] += velocity[1] * deltaTime;
+            position[2] += velocity[2] * deltaTime;
+            outputX.setText("xAcc, yAcc, zAcc: "+deltaX+", "+deltaY+", "+deltaZ+"\n"+"xVel, yVel, zVel: "+(int)velocity[0]+", "+(int)velocity[1]+", "+(int)velocity[2]+"\n"+"xPos, yPos, zPos: "+(int)position[0]+", "+(int)position[1]+", "+(int)position[2]);
+        }
+
+        last_Time = event.timestamp;
+        /*
         if(cache != null)
         {
-            float deltaTime = (event.timestamp - last_Time)*NS2S;
+
             outputY.setText(event.timestamp+"\n"+last_Time+"\n"+deltaTime+"");
 
                 for (int i = 0; i < 3; i++) {
@@ -266,6 +306,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         int distance = (int)Math.sqrt(position[0]*position[0]+position[1]*position[1]+position[2]*position[2])*100;
         //outputX.setText("x, y, z: "+position[0]+", "+position[1]+", "+position[2]);
         outputX.setText("xAcc, yAcc, zAcc: "+(int)event.values[0]+", "+(int)accelFilter[1]+", "+(int)accelFilter[2]+"\n"+"xVel, yVel, zVel: "+(int)velocity[0]+", "+(int)velocity[1]+", "+(int)velocity[2]+"\n"+"xPos, yPos, zPos: "+(int)position[0]+", "+(int)position[1]+", "+(int)position[2]+"\nDistance: "+distance);
+        */
     }
 
     private void highPassFilter(float aX, float aY, float aZ)

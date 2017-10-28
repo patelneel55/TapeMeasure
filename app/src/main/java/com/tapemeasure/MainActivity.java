@@ -65,6 +65,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private final Handler mHideHandler = new Handler();
     private View mContentView;
     public boolean start = true;
+
+    private final float NOISE = (float)2.0;
+    private boolean mInitialized = false;
+
+    private float mLastX, mLastY, mLastZ;
     private final Runnable mHidePart2Runnable = new Runnable() {
         @SuppressLint("InlinedApi")
         @Override
@@ -145,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //just some textviews, for data output
         outputX = (TextView) findViewById(R.id.outputX);
         outputY = (TextView) findViewById(R.id.outputY);
-        
+
         Button btn = (Button) findViewById(R.id.start_btn);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -249,11 +254,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //highPassRampingFilter(event.values[0], event.values[1], event.values[2]);
         //highPassFilter(event.values[0], event.values[1], event.values[2]);
 
-<<<<<<< HEAD
 
-        float x = event.values[0];
-        float y = event.values[1];
-        float z = event.values[2];
+        float x = rou(event.values[0]);
+        float y =  rou(event.values[1]);
+        float z =  rou(event.values[2]);
 
         float deltaTime = (event.timestamp - last_Time)*NS2S;
         if (!mInitialized) {
@@ -283,27 +287,26 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
 
-            //Remonns Sum Test Code
-            if(deltaX != 0.0f)
-            {
-                integralV[0] += trapArea(history[0], deltaX, deltaTime);
-                historyV[0] = integralV[0];
-                integralD[0] += trapArea(historyV[0], integralV[0], deltaTime);
-            }
-            if(deltaY != 0.0f)
-            {
-                integralV[1] += trapArea(history[1], deltaY, deltaTime);
-                historyV[1] = integralV[1];
-                integralD[1] += trapArea(historyV[1],integralV[1], deltaTime);
-            }
-            if(deltaZ != 0.0f) {
-                integralV[2] += trapArea(history[2], deltaZ, deltaTime);
-                historyV[2] = integralV[2];
-                integralD[2] += trapArea(historyV[2], integralV[2], deltaTime);
-            }
-            else if(deltaX == 0.0f || deltaY == 0.0f || deltaZ == 0.0f) {
+            //Riemonns Sum Test Code
+
+            //X
+            integralV[0] += trapArea(rou(history[0]), deltaX, deltaTime);
+            historyV[0] = rou(integralV[0]);
+            integralD[0] += trapArea(rou(historyV[0]), rou(integralV[0]), deltaTime);
+
+            //Y
+            integralV[1] += trapArea(history[1], deltaY, deltaTime);
+            historyV[1] = integralV[1];
+            integralD[1] += trapArea(historyV[1],integralV[1], deltaTime);
+
+            //Z
+            integralV[2] += trapArea(history[2], deltaZ, deltaTime);
+            historyV[2] = integralV[2];
+            integralD[2] += trapArea(historyV[2], integralV[2], deltaTime);
+
+            /*else if(deltaX == 0.0f || deltaY == 0.0f || deltaZ == 0.0f) {
                 historyV[0] = historyV[1] = historyV[2] = 0;
-            }
+            }*/
 
             outputY.setText("xDis " + integralD[0] + " | yDis" + integralD[1] + " | zDis " + integralD[2]);
             outputX.setText("xAcc, yAcc, zAcc: "+deltaX+", "+deltaY+", "+deltaZ+"\n"+"xVel, yVel, zVel: "+(int)velocity[0]+", "+(int)velocity[1]+", "+(int)velocity[2]+"\n"+"xPos, yPos, zPos: "+position[0]+", "+position[1]+", "+position[2]);
@@ -311,11 +314,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         last_Time = event.timestamp;
         /*
-=======
->>>>>>> parent of 541593b... Projects stable acceleration readings
         if(cache != null)
         {
-            float deltaTime = (event.timestamp - last_Time)*NS2S;
+
             outputY.setText(event.timestamp+"\n"+last_Time+"\n"+deltaTime+"");
 
                 for (int i = 0; i < 3; i++) {
@@ -337,6 +338,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         int distance = (int)Math.sqrt(position[0]*position[0]+position[1]*position[1]+position[2]*position[2])*100;
         //outputX.setText("x, y, z: "+position[0]+", "+position[1]+", "+position[2]);
         outputX.setText("xAcc, yAcc, zAcc: "+(int)event.values[0]+", "+(int)accelFilter[1]+", "+(int)accelFilter[2]+"\n"+"xVel, yVel, zVel: "+(int)velocity[0]+", "+(int)velocity[1]+", "+(int)velocity[2]+"\n"+"xPos, yPos, zPos: "+(int)position[0]+", "+(int)position[1]+", "+(int)position[2]+"\nDistance: "+distance);
+        */
     }
 
     private void highPassFilter(float aX, float aY, float aZ)
@@ -396,5 +398,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     float trapArea(float past, float current, float dT)
     {
         return 0.5f*dT*(past+current);
+    }
+
+    float rou(float n)
+    {
+        return Math.round(n*100)/100;
     }
 }

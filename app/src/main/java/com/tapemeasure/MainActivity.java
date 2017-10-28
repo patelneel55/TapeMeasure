@@ -289,20 +289,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             //Riemonns Sum Test Code
 
-            //X
-            integralV[0] += trapArea(rou(history[0]), deltaX, deltaTime);
-            historyV[0] = rou(integralV[0]);
-            integralD[0] += trapArea(rou(historyV[0]), rou(integralV[0]), deltaTime);
+                //X
+                integralV[0] += trapArea(rou(history[0]), deltaX, deltaTime);
+                System.out.println(deltaX);
+                historyV[0] = rou(integralV[0]);
+                integralD[0] += trapArea(rou(historyV[0]), rou(integralV[0]), deltaTime);
 
-            //Y
-            integralV[1] += trapArea(history[1], deltaY, deltaTime);
-            historyV[1] = integralV[1];
-            integralD[1] += trapArea(historyV[1],integralV[1], deltaTime);
+                //Y
+                integralV[1] += trapArea(history[1], deltaY, deltaTime);
+                historyV[1] = integralV[1];
+                integralD[1] += trapArea(historyV[1],integralV[1], deltaTime);
 
-            //Z
-            integralV[2] += trapArea(history[2], deltaZ, deltaTime);
-            historyV[2] = integralV[2];
-            integralD[2] += trapArea(historyV[2], integralV[2], deltaTime);
+                //Z
+                integralV[2] += trapArea(history[2], deltaZ, deltaTime);
+                historyV[2] = integralV[2];
+                integralD[2] += trapArea(historyV[2], integralV[2], deltaTime);
 
             /*else if(deltaX == 0.0f || deltaY == 0.0f || deltaZ == 0.0f) {
                 historyV[0] = historyV[1] = historyV[2] = 0;

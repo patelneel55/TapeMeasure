@@ -255,9 +255,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //highPassFilter(event.values[0], event.values[1], event.values[2]);
 
 
-        float x = event.values[0];
-        float y = event.values[1];
-        float z = event.values[2];
+        float x = rou(event.values[0]);
+        float y =  rou(event.values[1]);
+        float z =  rou(event.values[2]);
 
         float deltaTime = (event.timestamp - last_Time)*NS2S;
         if (!mInitialized) {
@@ -287,27 +287,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
 
-            //Remonns Sum Test Code
-            if(deltaX != 0.0f)
-            {
-                integralV[0] += trapArea(history[0], deltaX, deltaTime);
-                historyV[0] = integralV[0];
-                integralD[0] += trapArea(historyV[0], integralV[0], deltaTime);
-            }
-            if(deltaY != 0.0f)
-            {
+            //Riemonns Sum Test Code
+
+                //X
+                integralV[0] += trapArea(rou(history[0]), deltaX, deltaTime);
+                System.out.println(deltaX);
+                historyV[0] = rou(integralV[0]);
+                integralD[0] += trapArea(rou(historyV[0]), rou(integralV[0]), deltaTime);
+
+                //Y
                 integralV[1] += trapArea(history[1], deltaY, deltaTime);
                 historyV[1] = integralV[1];
                 integralD[1] += trapArea(historyV[1],integralV[1], deltaTime);
-            }
-            if(deltaZ != 0.0f) {
+
+                //Z
                 integralV[2] += trapArea(history[2], deltaZ, deltaTime);
                 historyV[2] = integralV[2];
                 integralD[2] += trapArea(historyV[2], integralV[2], deltaTime);
-            }
-            else if(deltaX == 0.0f || deltaY == 0.0f || deltaZ == 0.0f) {
+
+            /*else if(deltaX == 0.0f || deltaY == 0.0f || deltaZ == 0.0f) {
                 historyV[0] = historyV[1] = historyV[2] = 0;
-            }
+            }*/
 
             outputY.setText("xDis " + integralD[0] + " | yDis" + integralD[1] + " | zDis " + integralD[2]);
             outputX.setText("xAcc, yAcc, zAcc: "+deltaX+", "+deltaY+", "+deltaZ+"\n"+"xVel, yVel, zVel: "+(int)velocity[0]+", "+(int)velocity[1]+", "+(int)velocity[2]+"\n"+"xPos, yPos, zPos: "+position[0]+", "+position[1]+", "+position[2]);
@@ -399,5 +399,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     float trapArea(float past, float current, float dT)
     {
         return 0.5f*dT*(past+current);
+    }
+
+    float rou(float n)
+    {
+        return Math.round(n*100)/100;
     }
 }

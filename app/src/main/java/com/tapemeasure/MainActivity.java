@@ -65,11 +65,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private final Handler mHideHandler = new Handler();
     private View mContentView;
     public boolean start = true;
-
-    private final float NOISE = (float)2.0;
-    private boolean mInitialized = false;
-
-    private float mLastX, mLastY, mLastZ;
     private final Runnable mHidePart2Runnable = new Runnable() {
         @SuppressLint("InlinedApi")
         @Override
@@ -254,6 +249,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //highPassRampingFilter(event.values[0], event.values[1], event.values[2]);
         //highPassFilter(event.values[0], event.values[1], event.values[2]);
 
+<<<<<<< HEAD
 
         float x = event.values[0];
         float y = event.values[1];
@@ -315,9 +311,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         last_Time = event.timestamp;
         /*
+=======
+>>>>>>> parent of 541593b... Projects stable acceleration readings
         if(cache != null)
         {
-
+            float deltaTime = (event.timestamp - last_Time)*NS2S;
             outputY.setText(event.timestamp+"\n"+last_Time+"\n"+deltaTime+"");
 
                 for (int i = 0; i < 3; i++) {
@@ -339,7 +337,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         int distance = (int)Math.sqrt(position[0]*position[0]+position[1]*position[1]+position[2]*position[2])*100;
         //outputX.setText("x, y, z: "+position[0]+", "+position[1]+", "+position[2]);
         outputX.setText("xAcc, yAcc, zAcc: "+(int)event.values[0]+", "+(int)accelFilter[1]+", "+(int)accelFilter[2]+"\n"+"xVel, yVel, zVel: "+(int)velocity[0]+", "+(int)velocity[1]+", "+(int)velocity[2]+"\n"+"xPos, yPos, zPos: "+(int)position[0]+", "+(int)position[1]+", "+(int)position[2]+"\nDistance: "+distance);
-        */
     }
 
     private void highPassFilter(float aX, float aY, float aZ)

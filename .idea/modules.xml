@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/TapeMeasure.iml" filepath="$PROJECT_DIR$/TapeMeasure.iml" />
+      <module fileurl="file://C:\Users\Neel\Documents\GitHub\TapeMeasure\TapeMeasure.iml" filepath="C:\Users\Neel\Documents\GitHub\TapeMeasure\TapeMeasure.iml" />
       <module fileurl="file://C:\Alpallion\Desktop\TapeMeasure\TapeMeasure.iml" filepath="C:\Alpallion\Desktop\TapeMeasure\TapeMeasure.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://C:\Alpallion\Desktop\TapeMeasure\app\app.iml" filepath="C:\Alpallion\Desktop\TapeMeasure\app\app.iml" />

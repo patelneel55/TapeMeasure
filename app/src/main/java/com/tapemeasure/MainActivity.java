@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private View mContentView;
     public boolean start = true;
 
-    private final float NOISE = (float)2.0;
+    private final float NOISE = (float)0.05;
     private boolean mInitialized = false;
 
     private float mLastX, mLastY, mLastZ;
@@ -255,29 +255,32 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //highPassFilter(event.values[0], event.values[1], event.values[2]);
 
 
-        float x = rou(event.values[0]);
-        float y =  rou(event.values[1]);
-        float z =  rou(event.values[2]);
+        float x = Math.abs(event.values[0]);
+        float y = Math.abs(event.values[1]);
+        float z = Math.abs(event.values[2]);
 
+        highPassRampingFilter(x, y, z);
         float deltaTime = (event.timestamp - last_Time)*NS2S;
+
         if (!mInitialized) {
             mLastX = x;
             mLastY = y;
             mLastZ = z;
             velocity = new float[] {0f, 0f, 0f};
             position = new float[] {0f, 0f, 0f};
+            historyV[0] = 0;
+            historyV[1] = 0;
+            historyV[2] = 0;
             outputX.setText("xAcc, yAcc, zAcc: 0,0,0");
             mInitialized = true;
         } else {
             float deltaX = x-mLastX;
             float deltaY = y-mLastY;
             float deltaZ = z-mLastZ;
-            //if (Math.abs(deltaX) < NOISE) deltaX = (float) 0.0;
-            //if (Math.abs(deltaY) < NOISE) deltaY = (float) 0.0;
-            //if (Math.abs(deltaZ) < NOISE) deltaZ = (float) 0.0;
-            mLastX = x;
-            mLastY = y;
-            mLastZ = z;
+            if (Math.abs(deltaX) < NOISE) deltaX = (float) 0.0;
+            if (Math.abs(deltaY) < NOISE) deltaY = (float) 0.0;
+            if (Math.abs(deltaZ) < NOISE) deltaZ = (float) 0.0;
+
             velocity[0] = ( deltaX* deltaTime);
             velocity[1] = ( deltaY* deltaTime);
             velocity[2] = ( deltaZ* deltaTime);
@@ -286,22 +289,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             position[2] += velocity[2] * deltaTime;
 
 
-
             //Riemonns Sum Test Code
 
                 //X
-                integralV[0] += trapArea(history[0], deltaX, deltaTime);
-                System.out.println(deltaX);
-                historyV[0] = integralV[0];
+                integralV[0] += trapArea(0, deltaX, deltaTime);
+
+                if(integralV[0] < 0 || deltaX == 0)integralV[0] = 0;
                 integralD[0] += trapArea(historyV[0], integralV[0], deltaTime);
+                historyV[0] = integralV[0];
+                //integralD[0] += (integralV[0] *deltaTime);
+                System.out.println("SensAccel: " + x + " FilterAccel: " + accelFilter[0] + " deltaX: " + deltaX + " Velocity: "+ integralV[0]+" Distance: "+ integralD[0]);
 
                 //Y
-                integralV[1] += trapArea(history[1], deltaY, deltaTime);
+                integralV[1] += trapArea(0, deltaY, deltaTime);
                 historyV[1] = integralV[1];
                 integralD[1] += trapArea(historyV[1],integralV[1], deltaTime);
 
                 //Z
-                integralV[2] += trapArea(history[2], deltaZ, deltaTime);
+                integralV[2] += trapArea(0, deltaZ, deltaTime);
                 historyV[2] = integralV[2];
                 integralD[2] += trapArea(historyV[2], integralV[2], deltaTime);
 
@@ -310,10 +315,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }*/
 
             outputY.setText("xDis " + integralD[0] + " | yDis" + integralD[1] + " | zDis " + integralD[2]);
-            outputX.setText("xAcc, yAcc, zAcc: "+deltaX+", "+deltaY+", "+deltaZ+"\n"+"xVel, yVel, zVel: "+(int)velocity[0]+", "+(int)velocity[1]+", "+(int)velocity[2]+"\n"+"xPos, yPos, zPos: "+position[0]+", "+position[1]+", "+position[2]);
+            outputX.setText("xAcc, yAcc, zAcc: "+deltaX+", "+deltaY+", "+deltaZ+"\n"+"xVel, yVel, zVel: "+velocity[0]+", "+velocity[1]+", "+velocity[2]+"\n"+"xPos, yPos, zPos: "+position[0]+", "+position[1]+", "+position[2]);
         }
 
         last_Time = event.timestamp;
+        mLastX = x;
+        mLastY = y;
+        mLastZ = z;
         /*
         if(cache != null)
         {

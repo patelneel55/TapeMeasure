@@ -145,7 +145,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+        //findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
 
         //just some textviews, for data output
         outputX = (TextView) findViewById(R.id.outputX);
@@ -214,7 +214,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     {
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         Sensor accelerometer = sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).get(0);
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
     }
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
@@ -323,11 +323,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 //X
                 integralV[0] += trapArea(0, deltaX, deltaTime);
 
-                if(integralV[0] < 0 || deltaX == 0)integralV[0] = 0;
+               // if(integralV[0] < 0 || deltaX == 0)integralV[0] = 0;
                 integralD[0] += trapArea(historyV[0], integralV[0], deltaTime);
                 historyV[0] = integralV[0];
                 //integralD[0] += (integralV[0] *deltaTime);
-                System.out.println("SensAccel: " + x + " FilterAccel: " + accelFilter[0] + " deltaX: " + deltaX + " Velocity: "+ integralV[0]+" Distance: "+ integralD[0]);
+               System.out.println("SensAccel: " + x + " FilterAccel: " + accelFilter[0] + " deltaX: " + deltaX + " Velocity: "+ integralV[0]+" Distance: "+ integralD[0]);
 
                 //Y
                 integralV[1] += trapArea(0, deltaY, deltaTime);
@@ -342,6 +342,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             /*else if(deltaX == 0.0f || deltaY == 0.0f || deltaZ == 0.0f) {
                 historyV[0] = historyV[1] = historyV[2] = 0;
             }*/
+
+            //System.out.println(deltaX);
 
             outputY.setText("xDis " + integralD[0] + " | yDis" + integralD[1] + " | zDis " + integralD[2]);
             outputX.setText("xAcc, yAcc, zAcc: "+deltaX+", "+deltaY+", "+deltaZ+"\n"+"xVel, yVel, zVel: "+velocity[0]+", "+velocity[1]+", "+velocity[2]+"\n"+"xPos, yPos, zPos: "+position[0]+", "+position[1]+", "+position[2]);

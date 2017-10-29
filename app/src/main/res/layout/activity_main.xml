@@ -62,10 +62,20 @@
             android:id="@+id/start_btn"
             android:layout_width="150dp"
             android:layout_height="150dp"
-            android:layout_gravity="bottom"
+            android:layout_gravity="bottom|left"
             android:background="@drawable/rnd_button"
             android:padding="15dp"
             android:text="Start"
+            android:typeface="monospace" />
+
+        <Button
+            android:id="@+id/reset_btn"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_gravity="bottom|right"
+            android:background="@drawable/rnd_button"
+            android:padding="15dp"
+            android:text="Restart"
             android:typeface="monospace" />
 
         <TextView

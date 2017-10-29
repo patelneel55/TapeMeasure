@@ -151,8 +151,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         outputX = (TextView) findViewById(R.id.outputX);
         outputY = (TextView) findViewById(R.id.outputY);
 
-        Button btn = (Button) findViewById(R.id.start_btn);
-        btn.setOnClickListener(new View.OnClickListener() {
+        Button start_btn = (Button) findViewById(R.id.start_btn);
+        Button reset_btn = (Button) findViewById(R.id.reset_btn);
+
+        start_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(start)
@@ -174,6 +176,33 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     start = true;
                 }
             }
+        });
+
+        reset_btn.setOnClickListener(new View.OnClickListener()
+        {
+          @Override
+          public void onClick(View v)
+          {
+              Button btn = (Button) findViewById(R.id.start_btn);
+              stopSensors();
+              btn.setText("Start");
+              start = true;
+
+              //Velocity Integral
+              integralV = new float[3];
+              //Distance Integral
+              integralD = new float[3];
+              //History for Velocity
+              historyV = new float[3];
+
+              history = new float[3];
+              cache = new float[3];
+              velocity = new float[3];
+              position = new float[3];
+
+              outputY.setText("xDis " + integralD[0] + " | yDis" + integralD[1] + " | zDis " + integralD[2]);
+              outputX.setText("xAcc, yAcc, zAcc: "+0+", "+0+", "+0+"\n"+"xVel, yVel, zVel: "+velocity[0]+", "+velocity[1]+", "+velocity[2]+"\n"+"xPos, yPos, zPos: "+position[0]+", "+position[1]+", "+position[2]);
+          }
         });
     }
 

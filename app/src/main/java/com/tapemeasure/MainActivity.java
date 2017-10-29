@@ -145,14 +145,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+        //findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
 
         //just some textviews, for data output
         outputX = (TextView) findViewById(R.id.outputX);
         outputY = (TextView) findViewById(R.id.outputY);
 
-        Button btn = (Button) findViewById(R.id.start_btn);
-        btn.setOnClickListener(new View.OnClickListener() {
+        Button start_btn = (Button) findViewById(R.id.start_btn);
+        Button reset_btn = (Button) findViewById(R.id.reset_btn);
+
+        start_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(start)
@@ -175,6 +177,33 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
             }
         });
+
+        reset_btn.setOnClickListener(new View.OnClickListener()
+        {
+          @Override
+          public void onClick(View v)
+          {
+              Button btn = (Button) findViewById(R.id.start_btn);
+              stopSensors();
+              btn.setText("Start");
+              start = true;
+
+              //Velocity Integral
+              integralV = new float[3];
+              //Distance Integral
+              integralD = new float[3];
+              //History for Velocity
+              historyV = new float[3];
+
+              history = new float[3];
+              cache = new float[3];
+              velocity = new float[3];
+              position = new float[3];
+
+              outputY.setText("xDis " + integralD[0] + " | yDis" + integralD[1] + " | zDis " + integralD[2]);
+              outputX.setText("xAcc, yAcc, zAcc: "+0+", "+0+", "+0+"\n"+"xVel, yVel, zVel: "+velocity[0]+", "+velocity[1]+", "+velocity[2]+"\n"+"xPos, yPos, zPos: "+position[0]+", "+position[1]+", "+position[2]);
+          }
+        });
     }
 
     public void stopSensors()
@@ -185,7 +214,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     {
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         Sensor accelerometer = sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).get(0);
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
     }
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
@@ -294,11 +323,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 //X
                 integralV[0] += trapArea(0, deltaX, deltaTime);
 
-                if(integralV[0] < 0 || deltaX == 0)integralV[0] = 0;
+               // if(integralV[0] < 0 || deltaX == 0)integralV[0] = 0;
                 integralD[0] += trapArea(historyV[0], integralV[0], deltaTime);
                 historyV[0] = integralV[0];
                 //integralD[0] += (integralV[0] *deltaTime);
-                System.out.println("SensAccel: " + x + " FilterAccel: " + accelFilter[0] + " deltaX: " + deltaX + " Velocity: "+ integralV[0]+" Distance: "+ integralD[0]);
+               System.out.println("SensAccel: " + x + " FilterAccel: " + accelFilter[0] + " deltaX: " + deltaX + " Velocity: "+ integralV[0]+" Distance: "+ integralD[0]);
 
                 //Y
                 integralV[1] += trapArea(0, deltaY, deltaTime);
@@ -313,6 +342,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             /*else if(deltaX == 0.0f || deltaY == 0.0f || deltaZ == 0.0f) {
                 historyV[0] = historyV[1] = historyV[2] = 0;
             }*/
+
+            //System.out.println(deltaX);
 
             outputY.setText("xDis " + integralD[0] + " | yDis" + integralD[1] + " | zDis " + integralD[2]);
             outputX.setText("xAcc, yAcc, zAcc: "+deltaX+", "+deltaY+", "+deltaZ+"\n"+"xVel, yVel, zVel: "+velocity[0]+", "+velocity[1]+", "+velocity[2]+"\n"+"xPos, yPos, zPos: "+position[0]+", "+position[1]+", "+position[2]);

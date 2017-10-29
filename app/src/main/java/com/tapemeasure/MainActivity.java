@@ -269,12 +269,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             outputX.setText("xAcc, yAcc, zAcc: 0,0,0");
             mInitialized = true;
         } else {
-            float deltaX = mLastX - x;
-            float deltaY = mLastY - y;
-            float deltaZ = mLastZ - z;
-            if (Math.abs(deltaX) < NOISE) deltaX = (float) 0.0;
-            if (Math.abs(deltaY) < NOISE) deltaY = (float) 0.0;
-            if (Math.abs(deltaZ) < NOISE) deltaZ = (float) 0.0;
+            float deltaX = x-mLastX;
+            float deltaY = y-mLastY;
+            float deltaZ = z-mLastZ;
+            //if (Math.abs(deltaX) < NOISE) deltaX = (float) 0.0;
+            //if (Math.abs(deltaY) < NOISE) deltaY = (float) 0.0;
+            //if (Math.abs(deltaZ) < NOISE) deltaZ = (float) 0.0;
             mLastX = x;
             mLastY = y;
             mLastZ = z;
@@ -290,10 +290,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             //Riemonns Sum Test Code
 
                 //X
-                integralV[0] += trapArea(rou(history[0]), deltaX, deltaTime);
+                integralV[0] += trapArea(history[0], deltaX, deltaTime);
                 System.out.println(deltaX);
-                historyV[0] = rou(integralV[0]);
-                integralD[0] += trapArea(rou(historyV[0]), rou(integralV[0]), deltaTime);
+                historyV[0] = integralV[0];
+                integralD[0] += trapArea(historyV[0], integralV[0], deltaTime);
 
                 //Y
                 integralV[1] += trapArea(history[1], deltaY, deltaTime);

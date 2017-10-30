@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public boolean start = true;
 
     private final float NOISE = (float) 0.1;
+    private final int DELAY = SensorManager.SENSOR_DELAY_NORMAL;
     private boolean mInitialized = false;
 
     private final Runnable mHidePart2Runnable = new Runnable() {
@@ -254,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void startSensors() {
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         Sensor accelerometer = sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).get(0);
-        sensorManager.registerListener(this, accelerometer, 5);
+        sensorManager.registerListener(this, accelerometer, DELAY);
     }
 
     @Override
@@ -271,7 +272,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (mVisible) {
             hide();
         } else {
-            show();
+            //show();
         }
     }
 
@@ -355,7 +356,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 velHist[i] = velocity[i];
             }
 
-            System.out.println("SensAccel: " + accelFilter[0] + " FilterAccel: " + accelFilter[0] + " deltaX: " + deltaAcc[0] + " Velocity: " + velocity[0] + " Distance: " + position[0] + " deltaTime: " + deltaTime);
+            int vectorPrint = 2;
+            System.out.println("SensAccel: " + accelFilter[vectorPrint] + " FilterAccel: " + accelFilter[vectorPrint] + " deltaX: " + deltaAcc[vectorPrint] + " Velocity: " + velocity[vectorPrint] + " Distance: " + position[vectorPrint] + " deltaTime: " + deltaTime);
 
             outputY.setText("xDis " + position[0] + " | yDis" + position[1] + " | zDis " + position[2]);
         }

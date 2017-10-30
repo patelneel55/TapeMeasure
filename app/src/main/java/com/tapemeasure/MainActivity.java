@@ -40,27 +40,25 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
 
     //for accelerometer values
-    TextView outputX;
     TextView outputY;
     SensorManager sensorManager = null;
-    StringBuilder builder = new StringBuilder();
 
-    //Velocity Integral
-    float [] integralV = new float[3];
-    //Distance Integral
-    float [] integralD = new float[3];
+    //History for Acceleration
+    float[] accHist = new float[3];
     //History for Velocity
-    float[] historyV = new float[3];
-
-    float [] history = new float[3];
+    float [] velHist = new float[3];
     float [] cache = null;
+    //X, Y, Z velocity values
     float [] velocity = null;
+    //X, Y, Z position values
     float [] position = null;
-    private static final boolean ADAPTIVE_ACCEL_FILTER = true;
+    //X, Y, Z acceleration values
     float accelFilter[] = new float[3];
-    String [] direction = {"NONE","NONE"};
-    static final float NS2S = 1.0f / 1000000000.0f;
     long last_Time = 0;
+
+    //High-Pass Filtering Variables
+    private static final boolean ADAPTIVE_ACCEL_FILTER = true;
+    static final float NS2S = 1.0f / 1000000000.0f;
     private static final int UI_ANIMATION_DELAY = 300;
     private final Handler mHideHandler = new Handler();
     private View mContentView;
@@ -69,7 +67,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private final float NOISE = (float)0.3;
     private boolean mInitialized = false;
 
-    private float mLastX, mLastY, mLastZ;
     private final Runnable mHidePart2Runnable = new Runnable() {
         @SuppressLint("InlinedApi")
         @Override
@@ -148,7 +145,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
 
         //just some textviews, for data output
-        outputX = (TextView) findViewById(R.id.outputX);
         outputY = (TextView) findViewById(R.id.outputY);
 
         Button start_btn = (Button) findViewById(R.id.start_btn);
@@ -161,7 +157,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 {
                     Button btn = (Button) findViewById(R.id.start_btn);
                     outputY.setVisibility(View.VISIBLE);
-                    outputX.setVisibility(View.VISIBLE);
                     startSensors();
                     btn.setText("Stop");
                     start = false;
@@ -170,7 +165,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 {
                     Button btn = (Button) findViewById(R.id.start_btn);
                     outputY.setVisibility(View.VISIBLE);
-                    outputX.setVisibility(View.VISIBLE);
                     stopSensors();
                     btn.setText("Start");
                     start = true;
@@ -180,29 +174,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         reset_btn.setOnClickListener(new View.OnClickListener()
         {
-          @Override
-          public void onClick(View v)
-          {
-              Button btn = (Button) findViewById(R.id.start_btn);
-              stopSensors();
-              btn.setText("Start");
-              start = true;
+            @Override
+            public void onClick(View v)
+            {
+                  Button btn = (Button) findViewById(R.id.start_btn);
+                  stopSensors();
+                  btn.setText("Start");
+                  start = true;
 
-              //Velocity Integral
-              integralV = new float[3];
-              //Distance Integral
-              integralD = new float[3];
-              //History for Velocity
-              historyV = new float[3];
+                  //Velocity Integral
+                  velocity = new float[3];
+                  //Distance Integral
+                  position = new float[3];
+                  //History for Velocity
+                  velHist = new float[3];
 
-              history = new float[3];
-              cache = new float[3];
-              velocity = new float[3];
-              position = new float[3];
+                  accHist = new float[3];
+                  cache = new float[3];
+                  velocity = new float[3];
+                  position = new float[3];
 
-              outputY.setText("xDis " + integralD[0] + " | yDis" + integralD[1] + " | zDis " + integralD[2]);
-              outputX.setText("xAcc, yAcc, zAcc: "+0+", "+0+", "+0+"\n"+"xVel, yVel, zVel: "+velocity[0]+", "+velocity[1]+", "+velocity[2]+"\n"+"xPos, yPos, zPos: "+position[0]+", "+position[1]+", "+position[2]);
-          }
+                  outputY.setText("xDis " + position[0] + " | yDis" + position[1] + " | zDis " + position[2]);
+            }
         });
     }
 
@@ -279,107 +272,53 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent event) {
 
+        for(int i = 0;i<3;i++)
+            accelFilter[i] = Math.abs(event.values[i]);
 
-        //highPassRampingFilter(event.values[0], event.values[1], event.values[2]);
-        //highPassFilter(event.values[0], event.values[1], event.values[2]);
-
-
-        float x = Math.abs(event.values[0]);
-        float y = Math.abs(event.values[1]);
-        float z = Math.abs(event.values[2]);
-
-        highPassRampingFilter(x, y, z);
         float deltaTime = (event.timestamp - last_Time)*NS2S;
 
-        if (!mInitialized) {
-            mLastX = x;
-            mLastY = y;
-            mLastZ = z;
+        if (!mInitialized)
+        {
+            for(int i = 0;i<3;i++)
+                accHist[i] = accelFilter[i];
+
             velocity = new float[] {0f, 0f, 0f};
             position = new float[] {0f, 0f, 0f};
-            historyV[0] = 0;
-            historyV[1] = 0;
-            historyV[2] = 0;
-            outputX.setText("xAcc, yAcc, zAcc: 0,0,0");
+
+            velHist[0] = velHist[1] = velHist[2] = 0;
             mInitialized = true;
-        } else {
-            float deltaX = x;
-            float deltaY = y;
-            float deltaZ = z;
-            if (Math.abs(deltaX) < NOISE) deltaX = (float) 0.0;
-            if (Math.abs(deltaY) < NOISE) deltaY = (float) 0.0;
-            if (Math.abs(deltaZ) < NOISE) deltaZ = (float) 0.0;
-
-            velocity[0] = ( deltaX* deltaTime);
-            velocity[1] = ( deltaY* deltaTime);
-            velocity[2] = ( deltaZ* deltaTime);
-            position[0] += velocity[0] * deltaTime;
-            position[1] += velocity[1] * deltaTime;
-            position[2] += velocity[2] * deltaTime;
-
-
-            //Riemonns Sum Test Code
-
-                //X
-                if(deltaX != 0)
-                    integralV[0] += trapArea(mLastX, deltaX, deltaTime);
-
-                if(integralV[0] < 0 || deltaX == 0)integralV[0] = 0;
-                integralD[0] += trapArea(historyV[0], integralV[0], deltaTime);
-                historyV[0] = integralV[0];
-                //integralD[0] += (integralV[0] *deltaTime);
-               System.out.println("SensAccel: " + x + " FilterAccel: " + accelFilter[0] + " deltaX: " + deltaX + " Velocity: "+ integralV[0]+" Distance: "+ integralD[0] + "deltaTime: " + deltaTime);
-
-                //Y
-                integralV[1] += trapArea(0, deltaY, deltaTime);
-                historyV[1] = integralV[1];
-                integralD[1] += trapArea(historyV[1],integralV[1], deltaTime);
-
-                //Z
-                integralV[2] += trapArea(0, deltaZ, deltaTime);
-                historyV[2] = integralV[2];
-                integralD[2] += trapArea(historyV[2], integralV[2], deltaTime);
-
-            /*else if(deltaX == 0.0f || deltaY == 0.0f || deltaZ == 0.0f) {
-                historyV[0] = historyV[1] = historyV[2] = 0;
-            }*/
-
-            //System.out.println(deltaX);
-
-            outputY.setText("xDis " + integralD[0] + " | yDis" + integralD[1] + " | zDis " + integralD[2]);
-            outputX.setText("xAcc, yAcc, zAcc: "+deltaX+", "+deltaY+", "+deltaZ+"\n"+"xVel, yVel, zVel: "+velocity[0]+", "+velocity[1]+", "+velocity[2]+"\n"+"xPos, yPos, zPos: "+position[0]+", "+position[1]+", "+position[2]);
-        }
-
-        last_Time = event.timestamp;
-        mLastX = x;
-        mLastY = y;
-        mLastZ = z;
-        /*
-        if(cache != null)
-        {
-
-            outputY.setText(event.timestamp+"\n"+last_Time+"\n"+deltaTime+"");
-
-                for (int i = 0; i < 3; i++) {
-                    velocity[i] = (event.values[i]+cache[i])/2 * deltaTime;
-                    position[i] += velocity[i] * deltaTime; // Position in meters
-                }
         }
         else
         {
-            cache = new float[3];
-            velocity = new float[3];//{event.values[0], event.values[1], event.values[2]};
-            position = new float[3];
-            velocity[0] = velocity[1] = velocity[2] = 0f;
-            position[0] = position[1] = position[2] = 0f;
-        }
-        System.arraycopy(event.values, 0, cache, 0, 3);
-        last_Time = event.timestamp;
+            float [] deltaAcc = new float[] {0f, 0f, 0f};
+            for(int i = 0;i<3;i++)
+                deltaAcc[i] = accelFilter[i];
+            if (Math.abs(deltaAcc[0]) < NOISE)
+            {
+                deltaAcc[0] = (float) 0.0;
+                accHist[0] = 0;
+            }
+            if (Math.abs(deltaAcc[1]) < NOISE) deltaAcc[1] = (float) 0.0;
+            if (Math.abs(deltaAcc[2]) < NOISE) deltaAcc[2] = (float) 0.0;
 
-        int distance = (int)Math.sqrt(position[0]*position[0]+position[1]*position[1]+position[2]*position[2])*100;
-        //outputX.setText("x, y, z: "+position[0]+", "+position[1]+", "+position[2]);
-        outputX.setText("xAcc, yAcc, zAcc: "+(int)event.values[0]+", "+(int)accelFilter[1]+", "+(int)accelFilter[2]+"\n"+"xVel, yVel, zVel: "+(int)velocity[0]+", "+(int)velocity[1]+", "+(int)velocity[2]+"\n"+"xPos, yPos, zPos: "+(int)position[0]+", "+(int)position[1]+", "+(int)position[2]+"\nDistance: "+distance);
-        */
+            //Reimann Sums to calculate velocity and position
+
+            for(int i = 0;i<3;i++)
+            {
+                if(deltaAcc[i] != 0)
+                    velocity[i] += trapArea(accHist[i], deltaAcc[i], deltaTime);
+                if(velocity[i] < 0 || deltaAcc[i] == 0)velocity[i] = 0;
+                position[i] += trapArea(velHist[i], velocity[i], deltaTime);
+                velHist[i] = velocity[i];
+            }
+
+            System.out.println("SensAccel: " + accelFilter[0] + " FilterAccel: " + accelFilter[0] + " deltaX: " + deltaAcc[0] + " Velocity: "+ velocity[0]+" Distance: "+ position[0] + " deltaTime: " + deltaTime);
+
+            outputY.setText("xDis " + position[0] + " | yDis" + position[1] + " | zDis " + position[2]);
+        }
+        last_Time = event.timestamp;
+        for(int i = 0;i<3;i++)
+            accHist[i] = accelFilter[i];
     }
 
     private void highPassFilter(float aX, float aY, float aZ)
@@ -399,19 +338,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             alpha = d * filterConstant / kAccelerometerNoiseAttenuation + (1.0f - d) * filterConstant;
         }
 
-        accelFilter[0] = (float) (alpha * (accelFilter[0] + aX - history[0]));
-        accelFilter[1] = (float) (alpha * (accelFilter[1] + aY - history[1]));
-        accelFilter[2] = (float) (alpha * (accelFilter[2] + aZ - history[2]));
+        accelFilter[0] = (float) (alpha * (accelFilter[0] + aX - accHist[0]));
+        accelFilter[1] = (float) (alpha * (accelFilter[1] + aY - accHist[1]));
+        accelFilter[2] = (float) (alpha * (accelFilter[2] + aZ - accHist[2]));
 
-        history[0] = aX;
-        history[1] = aY;
-        history[2] = aZ;
-
+        accHist[0] = aX;
+        accHist[1] = aY;
+        accHist[2] = aZ;
     }
 
     private void highPassRampingFilter(float aX, float aY, float aZ)
     {
-        final float filterFactor = 0.9f;
+        final float filterFactor = 0.15f;
         accelFilter[0] = aX*filterFactor+accelFilter[0]*(1.0f-filterFactor);
         accelFilter[1] = aY*filterFactor+accelFilter[1]*(1.0f-filterFactor);
         accelFilter[2] = aZ*filterFactor+accelFilter[2]*(1.0f-filterFactor);
@@ -419,10 +357,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelFilter[0] = aX - accelFilter[0];
         accelFilter[1] = aY - accelFilter[1];
         accelFilter[2] = aZ - accelFilter[2];
-    }
-
-    private void lowPassFilter(float aX, float aY, float aZ)
-    {
     }
 
     float clamp(float value, float min, float max)

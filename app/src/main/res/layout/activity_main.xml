@@ -58,6 +58,7 @@
             android:background="@drawable/rnd_button"
             android:padding="15dp"
             android:text="Restart"
+            android:visibility="invisible"
             android:typeface="monospace" />
 
         <TextView
@@ -69,7 +70,16 @@
             android:textColor="#33b5e5"
             android:textSize="50sp"
             android:textStyle="bold" />
+        
+
 
     </FrameLayout>
+
+    <ImageView
+        android:id="@+id/pointer"
+        android:layout_gravity="top|center"
+        android:src="@drawable/arrow"
+        android:layout_width="45dp"
+        android:layout_height="45dp" />
 
 </FrameLayout>

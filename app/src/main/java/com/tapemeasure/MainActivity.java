@@ -148,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         outputY = (TextView) findViewById(R.id.outputY);
 
         Button start_btn = (Button) findViewById(R.id.start_btn);
-        Button reset_btn = (Button) findViewById(R.id.reset_btn);
+        final Button reset_btn = (Button) findViewById(R.id.reset_btn);
 
         start_btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -165,6 +165,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 {
                     Button btn = (Button) findViewById(R.id.start_btn);
                     outputY.setVisibility(View.VISIBLE);
+                    reset_btn.setVisibility(View.VISIBLE);
                     stopSensors();
                     btn.setText("Start");
                     start = true;
@@ -178,6 +179,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             public void onClick(View v)
             {
                   Button btn = (Button) findViewById(R.id.start_btn);
+                  Button reset = (Button) findViewById(R.id.reset_btn);
                   stopSensors();
                   btn.setText("Start");
                   start = true;
@@ -195,6 +197,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                   position = new float[3];
 
                   outputY.setText("xDis " + position[0] + " | yDis" + position[1] + " | zDis " + position[2]);
+                  reset.setVisibility(View.INVISIBLE);
             }
         });
     }
@@ -295,7 +298,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             for(int i = 0;i<3;i++)
             {
                 deltaAcc[i] = accelFilter[i] - accHist[i];
-                if (Math.abs(deltaAcc[0]) < NOISE)
+                if (Math.abs(deltaAcc[i]) < NOISE)
                 {
                     deltaAcc[i] = (float) 0.0;
                     accHist[i] = 0;

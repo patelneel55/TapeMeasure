@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private View mContentView;
     public boolean start = true;
 
-    private final float NOISE = (float)0.05;
+    private final float NOISE = (float)0.3;
     private boolean mInitialized = false;
 
     private float mLastX, mLastY, mLastZ;
@@ -303,9 +303,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             outputX.setText("xAcc, yAcc, zAcc: 0,0,0");
             mInitialized = true;
         } else {
-            float deltaX = x-mLastX;
-            float deltaY = y-mLastY;
-            float deltaZ = z-mLastZ;
+            float deltaX = x;
+            float deltaY = y;
+            float deltaZ = z;
             if (Math.abs(deltaX) < NOISE) deltaX = (float) 0.0;
             if (Math.abs(deltaY) < NOISE) deltaY = (float) 0.0;
             if (Math.abs(deltaZ) < NOISE) deltaZ = (float) 0.0;
@@ -321,13 +321,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             //Riemonns Sum Test Code
 
                 //X
-                integralV[0] += trapArea(0, deltaX, deltaTime);
+                if(deltaX != 0)
+                    integralV[0] += trapArea(mLastX, deltaX, deltaTime);
 
-               // if(integralV[0] < 0 || deltaX == 0)integralV[0] = 0;
+                if(integralV[0] < 0 || deltaX == 0)integralV[0] = 0;
                 integralD[0] += trapArea(historyV[0], integralV[0], deltaTime);
                 historyV[0] = integralV[0];
                 //integralD[0] += (integralV[0] *deltaTime);
-               System.out.println("SensAccel: " + x + " FilterAccel: " + accelFilter[0] + " deltaX: " + deltaX + " Velocity: "+ integralV[0]+" Distance: "+ integralD[0]);
+               System.out.println("SensAccel: " + x + " FilterAccel: " + accelFilter[0] + " deltaX: " + deltaX + " Velocity: "+ integralV[0]+" Distance: "+ integralD[0] + "deltaTime: " + deltaTime);
 
                 //Y
                 integralV[1] += trapArea(0, deltaY, deltaTime);

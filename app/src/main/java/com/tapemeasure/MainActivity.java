@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private View mContentView;
     public boolean start = true;
 
-    private final float NOISE = (float)0.3;
+    private final float NOISE = (float)0.1;
     private boolean mInitialized = false;
 
     private final Runnable mHidePart2Runnable = new Runnable() {
@@ -207,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     {
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         Sensor accelerometer = sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).get(0);
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
     }
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
@@ -273,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent event) {
 
         for(int i = 0;i<3;i++)
-            accelFilter[i] = Math.abs(event.values[i]);
+            accelFilter[i] = event.values[i];
 
         float deltaTime = (event.timestamp - last_Time)*NS2S;
 
@@ -291,22 +291,23 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         else
         {
             float [] deltaAcc = new float[] {0f, 0f, 0f};
+
             for(int i = 0;i<3;i++)
-                deltaAcc[i] = accelFilter[i];
-            if (Math.abs(deltaAcc[0]) < NOISE)
             {
-                deltaAcc[0] = (float) 0.0;
-                accHist[0] = 0;
+                deltaAcc[i] = accelFilter[i] - accHist[i];
+                if (Math.abs(deltaAcc[0]) < NOISE)
+                {
+                    deltaAcc[i] = (float) 0.0;
+                    accHist[i] = 0;
+                }
             }
-            if (Math.abs(deltaAcc[1]) < NOISE) deltaAcc[1] = (float) 0.0;
-            if (Math.abs(deltaAcc[2]) < NOISE) deltaAcc[2] = (float) 0.0;
 
             //Reimann Sums to calculate velocity and position
 
             for(int i = 0;i<3;i++)
             {
                 if(deltaAcc[i] != 0)
-                    velocity[i] += trapArea(accHist[i], deltaAcc[i], deltaTime);
+                    velocity[i] += trapArea(accHist[i], accelFilter[i], deltaTime);
                 if(velocity[i] < 0 || deltaAcc[i] == 0)velocity[i] = 0;
                 position[i] += trapArea(velHist[i], velocity[i], deltaTime);
                 velHist[i] = velocity[i];

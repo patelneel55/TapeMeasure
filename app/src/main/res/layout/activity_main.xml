@@ -57,7 +57,7 @@
             android:layout_gravity="bottom|right"
             android:background="@drawable/rnd_button"
             android:padding="15dp"
-            android:text="Restart"
+            android:text="Reset"
             android:visibility="invisible"
             android:typeface="monospace" />
 
@@ -80,6 +80,29 @@
         android:layout_gravity="top|center"
         android:src="@drawable/arrow"
         android:layout_width="45dp"
-        android:layout_height="45dp" />
+        android:layout_height="45dp"
+        />
+
+    <Spinner
+        android:id="@+id/spinner1"
+        android:layout_width="wrap_content"
+        android:padding="10dp"
+        android:layout_gravity="top|center"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/btn_dropdown"
+        android:spinnerMode="dropdown" />
+
+    <Button
+        android:id="@+id/display"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_gravity="center_vertical|center_horizontal"
+        android:background="@drawable/rnd_button"
+        android:padding="15dp"
+        android:text=""
+        android:visibility="visible"
+        android:typeface="monospace" />
+
+
 
 </FrameLayout>

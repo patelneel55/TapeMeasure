@@ -11,7 +11,10 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import static android.R.attr.gravity;
@@ -21,7 +24,7 @@ import static android.R.attr.gravity;
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class MainActivity extends AppCompatActivity implements SensorEventListener{
+public class MainActivity extends AppCompatActivity implements SensorEventListener {
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -46,15 +49,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     //History for Acceleration
     float[] accHist = new float[3];
     //History for Velocity
-    float [] velHist = new float[3];
-    float [] cache = null;
+    float[] velHist = new float[3];
+    float[] cache = null;
     //X, Y, Z velocity values
-    float [] velocity = null;
+    float[] velocity = new float[3];
     //X, Y, Z position values
-    float [] position = null;
+    float[] position = new float[3];
     //X, Y, Z acceleration values
     float accelFilter[] = new float[3];
     long last_Time = 0;
+
+    //UI Options
+    String[] options = new String[]{"Distance", "Velocity", "Acceleration"};
+    String currentItem = "Distance";
+    int choice = 0;
+    int menuI = 0;
 
     //High-Pass Filtering Variables
     private static final boolean ADAPTIVE_ACCEL_FILTER = true;
@@ -64,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private View mContentView;
     public boolean start = true;
 
-    private final float NOISE = (float)0.1;
+    private final float NOISE = (float) 0.1;
     private boolean mInitialized = false;
 
     private final Runnable mHidePart2Runnable = new Runnable() {
@@ -119,7 +128,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     };
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -153,16 +161,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         start_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(start)
-                {
+                if (start) {
                     Button btn = (Button) findViewById(R.id.start_btn);
                     outputY.setVisibility(View.VISIBLE);
                     startSensors();
                     btn.setText("Stop");
                     start = false;
-                }
-                else
-                {
+                } else {
                     Button btn = (Button) findViewById(R.id.start_btn);
                     outputY.setVisibility(View.VISIBLE);
                     reset_btn.setVisibility(View.VISIBLE);
@@ -173,45 +178,85 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
-        reset_btn.setOnClickListener(new View.OnClickListener()
-        {
+        reset_btn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
-                  Button btn = (Button) findViewById(R.id.start_btn);
-                  Button reset = (Button) findViewById(R.id.reset_btn);
-                  stopSensors();
-                  btn.setText("Start");
-                  start = true;
+            public void onClick(View v) {
+                Button btn = (Button) findViewById(R.id.start_btn);
+                Button reset = (Button) findViewById(R.id.reset_btn);
+                stopSensors();
+                btn.setText("Start");
+                start = true;
 
-                  //Velocity Integral
-                  velocity = new float[3];
-                  //Distance Integral
-                  position = new float[3];
-                  //History for Velocity
-                  velHist = new float[3];
+                //Velocity Integral
+                velocity = new float[3];
+                //Distance Integral
+                position = new float[3];
+                //History for Velocity
+                velHist = new float[3];
 
-                  accHist = new float[3];
-                  cache = new float[3];
-                  velocity = new float[3];
-                  position = new float[3];
+                accHist = new float[3];
+                cache = new float[3];
+                velocity = new float[3];
+                position = new float[3];
 
-                  outputY.setText("xDis " + position[0] + " | yDis" + position[1] + " | zDis " + position[2]);
-                  reset.setVisibility(View.INVISIBLE);
+                outputY.setText("xDis " + position[0] + " | yDis" + position[1] + " | zDis " + position[2]);
+                reset.setVisibility(View.INVISIBLE);
+            }
+        });
+
+        Button switch_btn = (Button) findViewById(R.id.display);
+        switch_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                choice++;
+
+                if(choice>2)
+                    choice = 0;
+
+            }
+
+        });
+        switchBtn();
+
+
+        Spinner dropDown = (Spinner) findViewById(R.id.spinner1);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, options);
+        dropDown.setAdapter(adapter);
+        dropDown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (parent.getItemAtPosition(position).equals("Acceleration")) {
+                    menuI = 2;
+                    currentItem = parent.getItemAtPosition(position).toString();
+                }
+                if (parent.getItemAtPosition(position).equals("Velocity")) {
+                    menuI = 1;
+                    currentItem = parent.getItemAtPosition(position).toString();
+                }
+                if (parent.getItemAtPosition(position).equals("Distance")) {
+                    menuI = 0;
+                    currentItem = parent.getItemAtPosition(position).toString();
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
             }
         });
     }
 
-    public void stopSensors()
-    {
+    public void stopSensors() {
         sensorManager.unregisterListener(this);
     }
-    public void startSensors()
-    {
+
+    public void startSensors() {
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         Sensor accelerometer = sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).get(0);
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, accelerometer, 5);
     }
+
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
@@ -274,32 +319,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-
-        for(int i = 0;i<3;i++)
+        switchBtn();
+        for (int i = 0; i < 3; i++)
             accelFilter[i] = event.values[i];
 
-        float deltaTime = (event.timestamp - last_Time)*NS2S;
+        float deltaTime = (event.timestamp - last_Time) * NS2S;
 
-        if (!mInitialized)
-        {
-            for(int i = 0;i<3;i++)
+        if (!mInitialized) {
+            for (int i = 0; i < 3; i++)
                 accHist[i] = accelFilter[i];
 
-            velocity = new float[] {0f, 0f, 0f};
-            position = new float[] {0f, 0f, 0f};
+            velocity = new float[]{0f, 0f, 0f};
+            position = new float[]{0f, 0f, 0f};
 
             velHist[0] = velHist[1] = velHist[2] = 0;
             mInitialized = true;
-        }
-        else
-        {
-            float [] deltaAcc = new float[] {0f, 0f, 0f};
+        } else {
+            float[] deltaAcc = new float[]{0f, 0f, 0f};
 
-            for(int i = 0;i<3;i++)
-            {
+            for (int i = 0; i < 3; i++) {
                 deltaAcc[i] = accelFilter[i] - accHist[i];
-                if (Math.abs(deltaAcc[i]) < NOISE)
-                {
+                if (Math.abs(deltaAcc[i]) < NOISE) {
                     deltaAcc[i] = (float) 0.0;
                     accHist[i] = 0;
                 }
@@ -307,26 +347,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             //Reimann Sums to calculate velocity and position
 
-            for(int i = 0;i<3;i++)
-            {
-                if(deltaAcc[i] != 0)
+            for (int i = 0; i < 3; i++) {
+                if (deltaAcc[i] != 0)
                     velocity[i] += trapArea(accHist[i], accelFilter[i], deltaTime);
-                if(velocity[i] < 0 || deltaAcc[i] == 0)velocity[i] = 0;
+                if (velocity[i] < 0 || deltaAcc[i] == 0) velocity[i] = 0;
                 position[i] += trapArea(velHist[i], velocity[i], deltaTime);
                 velHist[i] = velocity[i];
             }
 
-            System.out.println("SensAccel: " + accelFilter[0] + " FilterAccel: " + accelFilter[0] + " deltaX: " + deltaAcc[0] + " Velocity: "+ velocity[0]+" Distance: "+ position[0] + " deltaTime: " + deltaTime);
+            System.out.println("SensAccel: " + accelFilter[0] + " FilterAccel: " + accelFilter[0] + " deltaX: " + deltaAcc[0] + " Velocity: " + velocity[0] + " Distance: " + position[0] + " deltaTime: " + deltaTime);
 
             outputY.setText("xDis " + position[0] + " | yDis" + position[1] + " | zDis " + position[2]);
         }
         last_Time = event.timestamp;
-        for(int i = 0;i<3;i++)
+        for (int i = 0; i < 3; i++)
             accHist[i] = accelFilter[i];
     }
 
-    private void highPassFilter(float aX, float aY, float aZ)
-    {
+    private void highPassFilter(float aX, float aY, float aZ) {
         float updateFreq = 30; // match this to your update speed
         float cutOffFreq = 0.9f;
         float RC = 1.0f / cutOffFreq;
@@ -336,8 +374,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         float kAccelerometerMinStep = 0.033f;
         float kAccelerometerNoiseAttenuation = 3.0f;
 
-        if(ADAPTIVE_ACCEL_FILTER)
-        {
+        if (ADAPTIVE_ACCEL_FILTER) {
             float d = clamp(Math.abs(norm(accelFilter[0], accelFilter[1], accelFilter[2]) - norm(aX, aY, aZ)) / kAccelerometerMinStep - 1.0f, 0.0f, 1.0f);
             alpha = d * filterConstant / kAccelerometerNoiseAttenuation + (1.0f - d) * filterConstant;
         }
@@ -351,36 +388,104 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accHist[2] = aZ;
     }
 
-    private void highPassRampingFilter(float aX, float aY, float aZ)
-    {
+    private void highPassRampingFilter(float aX, float aY, float aZ) {
         final float filterFactor = 0.15f;
-        accelFilter[0] = aX*filterFactor+accelFilter[0]*(1.0f-filterFactor);
-        accelFilter[1] = aY*filterFactor+accelFilter[1]*(1.0f-filterFactor);
-        accelFilter[2] = aZ*filterFactor+accelFilter[2]*(1.0f-filterFactor);
+        accelFilter[0] = aX * filterFactor + accelFilter[0] * (1.0f - filterFactor);
+        accelFilter[1] = aY * filterFactor + accelFilter[1] * (1.0f - filterFactor);
+        accelFilter[2] = aZ * filterFactor + accelFilter[2] * (1.0f - filterFactor);
 
         accelFilter[0] = aX - accelFilter[0];
         accelFilter[1] = aY - accelFilter[1];
         accelFilter[2] = aZ - accelFilter[2];
     }
 
-    float clamp(float value, float min, float max)
-    {
-        if(value < min)return min;
-        else if(value > max)return max;
+    float clamp(float value, float min, float max) {
+        if (value < min) return min;
+        else if (value > max) return max;
         return value;
     }
-    float norm(float a, float b, float c)
-    {
-        return (float) Math.sqrt(a*a+b*b+c*c);
+
+    float norm(float a, float b, float c) {
+        return (float) Math.sqrt(a * a + b * b + c * c);
     }
 
-    float trapArea(float past, float current, float dT)
-    {
-        return 0.5f*dT*(past+current);
+    float trapArea(float past, float current, float dT) {
+        return 0.5f * dT * (past + current);
     }
 
-    float rou(float n)
-    {
-        return Math.round(n*100)/100;
+    float rou(float n) {
+        return Math.round(n * 100) / 100;
+    }
+
+    public void switchBtn() {
+        Button btn = (Button) findViewById(R.id.display);
+        switch (menuI) {
+            case 0: {
+                switch (choice) {
+                    case 0: {
+                        btn.setText(currentItem + "\n" + position[choice] + "\n" + "X");
+                    }
+                    break;
+                    case 1: {
+                        btn.setText(currentItem + "\n" + position[choice] + "\n" + "Y");
+                    }
+                    break;
+                    case 2: {
+                        btn.setText(currentItem + "\n" + position[choice] + "\n" + "Z");
+                    }
+                    break;
+                    default: {
+                        choice = 0;
+                    }
+                    break;
+                }
+                break;
+
+            }
+            case 1: {
+                switch (choice) {
+                    case 0: {
+                        btn.setText(currentItem + "\n" + velocity[choice] + "\n" + "X");
+                    }
+                    break;
+                    case 1: {
+                        btn.setText(currentItem + "\n" + velocity[choice] + "\n" + "Y");
+                    }
+                    break;
+                    case 2: {
+                        btn.setText(currentItem + "\n" + velocity[choice] + "\n" + "Z");
+                    }
+                    break;
+                    default: {
+                        choice = 0;
+                    }
+                    break;
+                }
+                break;
+
+            }
+            case 2: {
+                switch (choice) {
+                    case 0: {
+                        btn.setText(currentItem + "\n" + accelFilter[choice] + "\n" + "X");
+                    }
+                    break;
+                    case 1: {
+                        btn.setText(currentItem + "\n" + accelFilter[choice] + "\n" + "Y");
+                    }
+                    break;
+                    case 2: {
+                        btn.setText(currentItem + "\n" + accelFilter[choice] + "\n" + "Z");
+                    }
+                    break;
+                    default: {
+                        choice = 0;
+                    }
+                    break;
+                }
+                break;
+
+            }
+        }
     }
 }
